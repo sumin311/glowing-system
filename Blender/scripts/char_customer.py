@@ -120,8 +120,8 @@ def build():
     part(gl, "Glasses", pivot=(0, 0, 1.5), parent=head_obj)
 
     # ---------------- 팔 ----------------
-    for side, sx in (("L", -1), ("R", 1)):
-        # Blender -Y 정면 기준: 캐릭터의 왼쪽 = -X (Unity 에서도 캐릭터 왼쪽)
+    for side, sx in (("R", -1), ("L", 1)):
+        # 캐릭터는 -Y 를 바라보므로 캐릭터의 오른쪽 = Blender -X (Unity 에서는 +X 로 변환되어 역시 캐릭터 오른쪽)
         arm = []
         sh = Vector((sx * 0.2, 0, 1.4))
         arm.append(sphere("shoulder", 0.058, sh, "M_Shirt", segs=14, rings=10))
@@ -132,7 +132,7 @@ def build():
         part(arm, "Arm_" + side, pivot=tuple(sh), parent=root)
 
     # ---------------- 다리 ----------------
-    for side, sx in (("L", -1), ("R", 1)):
+    for side, sx in (("R", -1), ("L", 1)):
         leg = []
         hip = Vector((sx * 0.085, 0, 0.92))
         leg.append(cylinder("thigh", 0.072, 0.44, hip + Vector((0, 0, -0.2)), "M_Pants", verts=16, radius2=0.062))
