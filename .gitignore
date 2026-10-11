@@ -26,3 +26,6 @@ __pycache__/
 /build.log
 /selftest.log
 /SelfTestResult.txt
+/diag.log
+/diag.txt
+/Shots/
