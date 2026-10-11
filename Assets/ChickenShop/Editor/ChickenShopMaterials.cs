@@ -82,62 +82,76 @@ namespace ChickenShop.EditorTools
         }
 
         // ------------------------------------------------------------------ 모델 머티리얼 추출/공유
+        /// <summary>
+        /// 리맵을 모두 해제하고 추출된 모델 머티리얼을 지운 뒤 FBX 를 다시 가져온다.
+        /// 색 공간(Gamma -> Linear) 이 바뀐 경우 FBX 색상 변환을 다시 적용하기 위해 사용한다.
+        /// </summary>
+        public static void ResetModelMaterials()
+        {
+            foreach (var g in AssetDatabase.FindAssets("t:Model", new[] { ChickenShopEditorUtil.ModelsDir }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(g);
+                var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+                if (importer == null) continue;
+                foreach (var kv in importer.GetExternalObjectMap())
+                {
+                    if (kv.Key.type == typeof(Material)) importer.RemoveRemap(kv.Key);
+                }
+                importer.SaveAndReimport();
+            }
+            foreach (var g in AssetDatabase.FindAssets("t:Material", new[] { ModelMatDir }))
+                AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(g));
+            AssetDatabase.SaveAssets();
+            Debug.Log("[ChickenShop/Materials] 모델 머티리얼 초기화 (재추출 예정)");
+        }
+
         /// <summary>모든 FBX 의 내장 머티리얼을 공용 .mat 으로 추출하고 리맵한다. 처리한 FBX 수 반환.</summary>
         public static int ExtractAndShareModelMaterials()
         {
             ChickenShopEditorUtil.EnsureFolder(ModelMatDir);
             var guids = AssetDatabase.FindAssets("t:Model", new[] { ChickenShopEditorUtil.ModelsDir });
             int count = 0;
-            var created = new HashSet<string>();
-            AssetDatabase.StartAssetEditing();
+            // 경로 -> 공용 머티리얼 (이번 실행에서 만든 것 포함, LoadAssetAtPath 재조회에 의존하지 않음)
+            var shared = new Dictionary<string, Material>();
             var toReimport = new List<string>();
-            try
+            foreach (var g in guids)
             {
-                foreach (var g in guids)
+                string path = AssetDatabase.GUIDToAssetPath(g);
+                var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+                if (importer == null) continue;
+                bool changed = false;
+                foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
                 {
-                    string path = AssetDatabase.GUIDToAssetPath(g);
-                    var importer = AssetImporter.GetAtPath(path) as ModelImporter;
-                    if (importer == null) continue;
-                    bool changed = false;
-                    foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+                    var mat = obj as Material;
+                    if (mat == null) continue; // 이미 리맵된 머티리얼은 서브에셋으로 나오지 않는다
+                    string target = ModelMatDir + "/" + mat.name + ".mat";
+                    Material external;
+                    if (!shared.TryGetValue(target, out external))
                     {
-                        var mat = obj as Material;
-                        if (mat == null) continue;
-                        // 이미 외부 머티리얼로 리맵되어 있으면 서브에셋으로 나오지 않는다
-                        string target = ModelMatDir + "/" + mat.name + ".mat";
-                        var existing = AssetDatabase.LoadAssetAtPath<Material>(target);
-                        if (existing == null && !created.Contains(target))
+                        external = AssetDatabase.LoadAssetAtPath<Material>(target);
+                        if (external == null)
                         {
-                            var copy = new Material(mat);
-                            AssetDatabase.CreateAsset(copy, target);
-                            created.Add(target);
-                            existing = copy;
+                            external = new Material(mat) { name = mat.name };
+                            AssetDatabase.CreateAsset(external, target);
                         }
-                        if (existing == null) existing = AssetDatabase.LoadAssetAtPath<Material>(target);
-                        if (existing != null)
-                        {
-                            importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), mat.name), existing);
-                            changed = true;
-                        }
+                        shared[target] = external;
                     }
-                    if (changed)
-                    {
-                        toReimport.Add(path);
-                        count++;
-                    }
+                    importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), mat.name), external);
+                    changed = true;
+                }
+                if (changed)
+                {
+                    toReimport.Add(path);
+                    count++;
                 }
             }
-            finally
-            {
-                AssetDatabase.StopAssetEditing();
-            }
+            AssetDatabase.SaveAssets();
             // 리맵 적용 (재가져오기)
             foreach (var p in toReimport)
             {
                 var importer = AssetImporter.GetAtPath(p) as ModelImporter;
                 if (importer != null) importer.SaveAndReimport();
             }
-            AssetDatabase.SaveAssets();
             TuneModelMaterials();
             return count;
         }

@@ -17,7 +17,7 @@ namespace ChickenShop
 
         protected override void Build()
         {
-            var body = CreateWindow("발주 단말기  (ESC 닫기)", new Vector2(1280f, 860f));
+            var body = CreateWindow("발주 단말기  (ESC 닫기)", new Vector2(1280f, 900f));
             var v = UIFactory.Vertical(body.gameObject, 12f, 0);
             v.childForceExpandHeight = false;
 
@@ -36,7 +36,7 @@ namespace ChickenShop
             content = UIFactory.Rect(body, "Content");
             var cv = UIFactory.Vertical(content.gameObject, 8f, 0);
             cv.childForceExpandHeight = false;
-            UIFactory.Layout(content, flexW: 1, prefH: 560);
+            UIFactory.Layout(content, flexW: 1, prefH: 600);
 
             statusText = UIFactory.Label(body, "", 24, TextAnchor.MiddleLeft, UIFactory.Warn, true);
             UIFactory.Layout(statusText, prefH: 36);
@@ -75,7 +75,7 @@ namespace ChickenShop
             Refresh();
         }
 
-        private RectTransform Row(float height = 64f)
+        private RectTransform Row(float height = 58f)
         {
             var row = UIFactory.Panel(content, "Row", UIFactory.PanelLight);
             UIFactory.Horizontal(row.gameObject, 12f, 8).childForceExpandHeight = true;

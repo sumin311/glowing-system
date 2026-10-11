@@ -18,7 +18,8 @@ namespace ChickenShop
         [SerializeField] private bool requiresExtraFryerUpgrade;
         [Header("연출")]
         [SerializeField] private Transform basket;
-        [SerializeField] private float basketDrop = 0.24f;
+        [Tooltip("조리 중 바구니가 내려가는 깊이(m). 치킨이 기름 위로 보이도록 절반만 잠기게 한다.")]
+        [SerializeField] private float basketDrop = 0.12f;
         [SerializeField] private ParticleSystem bubbles;
         [SerializeField] private WorldLabel statusLabel;
 

@@ -78,7 +78,16 @@ namespace ChickenShop
                 go.transform.localPosition = new Vector3(0f, 1.9f, 0f);
                 patienceBar = go.AddComponent<WorldProgressBar>();
             }
-            if (handAnchor == null) handAnchor = CustomerAppearance.FindDeep(transform, "Arm_R");
+            if (handAnchor == null) handAnchor = CustomerAppearance.FindDeep(transform, "HandAnchor");
+            if (handAnchor == null)
+            {
+                // 프리팹에 손 위치가 없으면 오른팔(어깨 피벗) 아래 손 위치에 만든다
+                var arm = CustomerAppearance.FindDeep(transform, "Arm_R");
+                var a = new GameObject("HandAnchor").transform;
+                a.SetParent(arm != null ? arm : transform, false);
+                a.localPosition = arm != null ? new Vector3(0f, -0.88f, 0.02f) : new Vector3(0.3f, 0.6f, 0f);
+                handAnchor = a;
+            }
             State = CustomerState.Entering;
         }
 
@@ -235,11 +244,11 @@ namespace ChickenShop
             var gm = GameManager.Instance;
             if (gm != null && gm.Items != null)
             {
-                Transform anchor = handAnchor != null ? handAnchor : transform;
-                var bag = gm.Items.CreateBagVisual(anchor);
+                // 봉투 원점(바닥)이 손잡이 아래에 오도록 HandAnchor 기준으로 배치
+                var bag = gm.Items.CreateBagVisual(handAnchor != null ? handAnchor : transform);
                 if (bag != null)
                 {
-                    bag.transform.localPosition = handAnchor != null ? new Vector3(0f, -0.62f, 0f) : new Vector3(0.3f, 0.6f, 0f);
+                    bag.transform.localPosition = Vector3.zero;
                     bag.transform.localScale = Vector3.one * 0.8f;
                 }
             }

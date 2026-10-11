@@ -3,7 +3,7 @@ kitchen_fryer.py - 업소용 1구 치킨 튀김기 (스테인리스, 기름통 +
 
 Unity 연동:
   - 루트 "Fryer" : 본체 (BoxCollider 는 Unity 에디터 스크립트가 bounds 기반으로 자동 추가)
-  - 자식 "Basket" : 튀김 바구니. FryerStation 이 조리 중 로컬 Y 를 -0.24 만큼 내린다.
+  - 자식 "Basket" : 튀김 바구니. FryerStation 이 조리 중 로컬 Y 를 -0.12 만큼 내린다 (치킨이 반쯤 잠김).
   - 바구니 위쪽 중심이 음식이 놓이는 위치 (Unity 에서 "ItemAnchor" 생성)
 실행: blender -b -P kitchen_fryer.py   또는   python kitchen_fryer.py (bpy 모듈)
 """

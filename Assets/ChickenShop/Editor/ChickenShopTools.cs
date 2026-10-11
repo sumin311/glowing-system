@@ -25,11 +25,7 @@ namespace ChickenShop.EditorTools
         [MenuItem("Chicken Shop/Reimport Models And Share Materials", false, 40)]
         private static void ReimportModels()
         {
-            foreach (var g in AssetDatabase.FindAssets("t:Model", new[] { ChickenShopEditorUtil.ModelsDir }))
-            {
-                var mi = AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(g)) as ModelImporter;
-                if (mi != null) mi.SaveAndReimport();
-            }
+            ChickenShopMaterials.ResetModelMaterials();
             int n = ChickenShopMaterials.ExtractAndShareModelMaterials();
             Debug.Log("[ChickenShop/Tools] 모델 재가져오기 + 머티리얼 공유 완료 (" + n + "개 FBX)");
         }

@@ -40,7 +40,13 @@ namespace ChickenShop.EditorTools
             try
             {
                 EditorUtility.DisplayProgressBar("Chicken Shop", "프로젝트 설정", 0.05f);
-                PrepareProject();
+                bool colorSpaceChanged = PrepareProject();
+                if (colorSpaceChanged)
+                {
+                    // Gamma 상태에서 가져온 FBX 색상은 Linear 기준으로 다시 가져와야 Blender 와 같은 색이 된다
+                    EditorUtility.DisplayProgressBar("Chicken Shop", "색 공간 변경 - 모델 다시 가져오기", 0.12f);
+                    ChickenShopMaterials.ResetModelMaterials();
+                }
                 EditorUtility.DisplayProgressBar("Chicken Shop", "모델 머티리얼 추출/공유", 0.2f);
                 int fbx = ChickenShopMaterials.ExtractAndShareModelMaterials();
                 CreateEnvironmentMaterials();
@@ -71,13 +77,19 @@ namespace ChickenShop.EditorTools
         }
 
         // ------------------------------------------------------------------ 프로젝트 준비
-        private static void PrepareProject()
+        /// <summary>프로젝트 설정. 색 공간을 Linear 로 바꿨으면 true.</summary>
+        private static bool PrepareProject()
         {
             foreach (var d in new[] { ChickenShopEditorUtil.PrefabsDir, ChickenShopEditorUtil.MaterialsDir, ChickenShopEditorUtil.ScenesDir, ChickenShopEditorUtil.ModelsDir })
                 ChickenShopEditorUtil.EnsureFolder(d);
             PlayerSettings.companyName = "ChickenShop";
             PlayerSettings.productName = "바삭치킨 시뮬레이터";
-            if (PlayerSettings.colorSpace != ColorSpace.Linear) PlayerSettings.colorSpace = ColorSpace.Linear;
+            bool changed = false;
+            if (PlayerSettings.colorSpace != ColorSpace.Linear)
+            {
+                PlayerSettings.colorSpace = ColorSpace.Linear;
+                changed = true;
+            }
             QualitySettings.pixelLightCount = Mathf.Max(QualitySettings.pixelLightCount, 8);
             QualitySettings.shadowDistance = 35f;
 
@@ -91,6 +103,7 @@ namespace ChickenShop.EditorTools
                     mi.SaveAndReimport();
                 }
             }
+            return changed;
         }
 
         private static void CreateEnvironmentMaterials()
