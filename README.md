@@ -1,6 +1,6 @@
 # 바삭치킨 시뮬레이터 — Unity 3D 1인칭 치킨집 운영 게임
 
-Unity **2022.3.62f1** · C# · Built-in Render Pipeline · 기본 Input Manager · 싱글플레이
+Unity **2022.3.62f3** (2022.3.62f1 도 가능) · C# · Built-in Render Pipeline · 기본 Input Manager · 싱글플레이
 
 플레이어는 치킨집 직원 겸 사장입니다. 1인칭으로 매장을 돌아다니며 주문을 받고, 생닭을 꺼내 반죽하고, 튀기고, 소스를 바르고, 포장해서 손님에게 전달합니다. 영업이 끝나면 정산을 확인하고, 번 돈으로 재료를 사고 장비를 업그레이드한 뒤 다음 날 영업을 이어 갑니다.
 
@@ -12,9 +12,10 @@ Unity **2022.3.62f1** · C# · Built-in Render Pipeline · 기본 Input Manager 
 
 ## 1. 빠른 시작
 
-1. **Unity Hub → Add → 이 폴더(저장소 루트)** 를 선택하고 Unity **2022.3.62f1** 로 엽니다.
+1. **Unity Hub → Add → 이 폴더(저장소 루트)** 를 선택하고 Unity **2022.3.62f3** 로 엽니다.
    - 처음 열 때 패키지(uGUI)와 에셋(FBX 35개, 텍스처, 폰트)을 가져오느라 몇 분 걸립니다.
-2. 상단 메뉴 **Chicken Shop → Create Game Scene** 을 실행합니다. 이 메뉴가 자동으로:
+   - 씬·프리팹·머티리얼은 이미 생성되어 저장소에 들어 있습니다. 바로 `Assets/ChickenShop/Scenes/MainMenu.unity` 를 열고 Play 해도 됩니다.
+2. (다시 만들 때만) 상단 메뉴 **Chicken Shop → Create Game Scene** 을 실행합니다. 이 메뉴가 자동으로:
    - FBX 가져오기 설정 확인(축 변환/스케일), 모델 머티리얼을 `Materials/Models/*.mat` 로 추출·공유
    - 바닥/벽 머티리얼 생성, 프리팹 생성(`Prefabs/Items`, `Prefabs/Stations`, `Prefabs/Customer.prefab`)
    - `Scenes/MainMenu.unity`, `Scenes/ChickenShop.unity` 생성 및 저장, Build Settings 등록
@@ -168,9 +169,19 @@ pip install bpy==5.1.2 && python Blender/scripts/build_all.py
 
 ## 6. 검증 결과
 
-이 작업 환경에는 **Unity Editor 가 없습니다** (라이선스/다운로드 불가). 그래서 아래처럼 실행한 것과 실행하지 못한 것을 구분합니다.
+### 실제 Unity 2022.3.62f3 에서 확인 (명령줄 batchmode)
+| 항목 | 방법 | 결과 |
+|---|---|---|
+| 스크립트 컴파일 + 씬 생성 | `-executeMethod ChickenShop.EditorTools.ChickenShopSceneBuilder.Build` | 컴파일 오류·경고 0, 씬 2개·프리팹·머티리얼 생성 성공 |
+| Play 모드 영업 루프 | `-executeMethod ChickenShop.EditorTools.ChickenShopBatchSelfTest.Run` (`-quit` 없이) | **46/46 통과**, Play 중 오류 로그 0 |
 
-### 이 환경에서 실제로 실행·확인한 것
+```bash
+# 예: 프로젝트 폴더에서 (Unity 에디터로 이 프로젝트를 열어 둔 상태가 아니어야 함)
+"C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Unity.exe" -batchmode -projectPath . -executeMethod ChickenShop.EditorTools.ChickenShopBatchSelfTest.Run -logFile selftest.log
+```
+결과는 `SelfTestResult.txt` 에 저장되고, 종료 코드 0 = 통과, 1 = 실패/시간 초과, 2 = 씬 없음.
+
+### Unity 없이 확인한 것 (초기 작업 환경)
 | 항목 | 방법 | 결과 |
 |---|---|---|
 | C# 컴파일 (런타임) | .NET 8 SDK + Unity 2021.3 UnityEngine 모듈 + uGUI 참조 DLL, C# 9 | 오류 0, 경고 0 |
@@ -182,11 +193,10 @@ pip install bpy==5.1.2 && python Blender/scripts/build_all.py
 | FBX 재가져오기 | 생성된 FBX 를 다시 import 해서 루트 회전 0, 스케일 1, 크기(m), 바닥 원점, 머티리얼, 부품 이름/피벗 확인 | 정상 |
 | 레이아웃 | 씬 빌더 좌표를 C# 소스에서 읽어 Blender 로 재현 렌더 (`preview_scene_layout.py`) | 작업대 겹침 없음, 동선 확인 |
 
-### Unity 에서 확인이 필요한 것 (이 환경에서 실행 불가)
-- `Chicken Shop > Create Game Scene` 실제 실행, Console 오류 여부, Play 모드 동작 전반 (이동/충돌/상호작용/UI/조명/성능).
-- 위 항목은 **게임 안에서 F10** (또는 Play 중 메뉴 `Chicken Shop > Run Self-Test`)으로 자동 검증할 수 있도록 `GameLoopSelfTest` 를 넣었습니다. 새 게임 직후(영업 준비) 실행하면 실제 씬의 작업대/손님으로 한 번의 영업 루프를 수행하며 다음을 PASS/FAIL 로 Console 에 출력합니다:
+### 아직 사람이 직접 확인해야 하는 것
+- 직접 플레이할 때의 느낌: 이동/충돌, 시점, UI 배치, 조명, 성능 (자동 검증은 로직만 확인).
+- 로직 자동 검증은 **게임 안에서 F10** (또는 Play 중 메뉴 `Chicken Shop > Run Self-Test`, 또는 위 명령줄)으로 실행할 수 있습니다(`GameLoopSelfTest`). 새 게임 직후(영업 준비) 실행하면 실제 씬의 작업대/손님으로 한 번의 영업 루프를 수행하며 다음을 PASS/FAIL 로 Console 에 출력합니다:
   재료 구매 금액, 생닭/튀김가루/식용유/소스/상자/봉투/콜라 차감, 생닭 전달·포장·튀김 차단, 조리 진행도 증가, 조리 중 꺼내기 차단, 단계별 주문 상태, 결제 금액, 평판 상승, **중복 결제 차단**, 시간 초과 → 주문 실패·평판 하락·손님 퇴장, 마감 → 정산·운영비·순이익 공식, 자동 저장, 저장/불러오기 왕복(자금·재고·평판·날짜). 기존 저장 파일은 백업 후 복원합니다.
-- 컴파일 확인은 Unity 2022.3 과 거의 같은 API 의 참조 DLL(런타임 2021.3, 에디터 2021.1)로 했습니다. 실제 2022.3.62f1 에서만 나타나는 API 경고(예: `FindObjectOfType` 사용 권장 변경)는 있을 수 있습니다.
 
 ## 7. 미구현 / 알려진 제한
 - **사운드 없음** (튀김 소리, 효과음, BGM 미포함).
@@ -195,7 +205,7 @@ pip install bpy==5.1.2 && python Blender/scripts/build_all.py
 - 저장은 영업 준비/정산 단계에서만 가능합니다(영업 중 손님·조리 상태는 저장하지 않음). 정산 시·다음 날 시작 시 자동 저장.
 - 주문은 손님 1명당 치킨 1마리(+콜라 선택)입니다. 반반/다중 수량 주문 없음.
 - 재료 유통기한, 직원 고용, 배달 주문, 그래픽/키 설정 메뉴(마우스 감도 제외)는 없습니다.
-- 프리팹/머티리얼/씬(.prefab/.mat/.unity)은 저장소에 없고 `Create Game Scene` 으로 생성됩니다 (Unity 없이 GUID 가 포함된 에셋 파일을 손으로 만들지 않기 위함).
+- 프리팹/머티리얼/씬(.prefab/.mat/.unity)은 `Create Game Scene` 이 만든 결과물입니다. 씬을 손으로 고쳤다면 이 메뉴를 다시 실행할 때 덮어써지니 주의하세요.
 - 대체 폰트: 나눔스퀘어라운드가 없으면 Unity 기본 폰트로 바뀌며 한글이 깨질 수 있습니다.
 
 ## 8. 문제 해결

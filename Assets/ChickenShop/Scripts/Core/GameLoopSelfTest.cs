@@ -26,6 +26,10 @@ namespace ChickenShop
         private bool running;
 
         public static bool LastRunPassed { get; private set; }
+        /// <summary>끝난 실행 횟수 (중단 포함). batchmode 실행기가 완료를 기다릴 때 사용.</summary>
+        public static int FinishedRuns { get; private set; }
+        /// <summary>마지막 실행의 전체 로그.</summary>
+        public static string LastReport { get; private set; } = "";
 
         private void Update()
         {
@@ -71,14 +75,12 @@ namespace ChickenShop
 
             if (gm == null || interactor == null || gm.Day == null)
             {
-                Debug.LogError("[ChickenShop/SelfTest] GameManager/PlayerInteractor 가 없습니다.");
-                running = false;
+                Abort("GameManager/PlayerInteractor 가 없습니다.");
                 yield break;
             }
             if (gm.Day.Phase != ShopPhase.PreOpen)
             {
-                Debug.LogError("[ChickenShop/SelfTest] 영업 준비 단계(새 게임 시작 직후)에서 실행하세요.");
-                running = false;
+                Abort("영업 준비 단계(새 게임 시작 직후)에서 실행하세요.");
                 yield break;
             }
             var carry = interactor.Carry;
@@ -261,10 +263,21 @@ namespace ChickenShop
             catch (System.Exception ex) { Debug.LogWarning("[ChickenShop/SelfTest] 저장 파일 복원 실패: " + ex.Message); }
             LastRunPassed = failed == 0 && passed > 0;
             log.AppendLine(string.Format("[ChickenShop/SelfTest] 결과: {0} 통과 / {1} 실패", passed, failed));
-            if (failed == 0) Debug.Log(log.ToString());
-            else Debug.LogError(log.ToString());
+            LastReport = log.ToString();
+            if (failed == 0) Debug.Log(LastReport);
+            else Debug.LogError(LastReport);
             GameManager.Toast("자동 검증: " + passed + " 통과 / " + failed + " 실패 (Console 확인)", failed == 0 ? ToastKind.Success : ToastKind.Error);
             running = false;
+            FinishedRuns++;
+        }
+
+        private void Abort(string why)
+        {
+            Debug.LogError("[ChickenShop/SelfTest] " + why);
+            LastRunPassed = false;
+            LastReport = "[ChickenShop/SelfTest] 중단: " + why;
+            running = false;
+            FinishedRuns++;
         }
     }
 }

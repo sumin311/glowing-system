@@ -22,3 +22,7 @@ __pycache__/
 /Tests/**/bin/
 /Tests/**/obj/
 /Dist/
+# 명령줄 실행 로그/결과
+/build.log
+/selftest.log
+/SelfTestResult.txt
